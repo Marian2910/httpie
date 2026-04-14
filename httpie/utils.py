@@ -137,7 +137,6 @@ def get_content_type(filename):
     to ``mimetypes``.
 
     """
-    filename_parts = filename.split('.')
     return mimetypes.guess_type(filename, strict=False)[0]
 
 

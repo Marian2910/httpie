@@ -137,6 +137,7 @@ def get_content_type(filename):
     to ``mimetypes``.
 
     """
+    filename_parts = filename.split('.')
     return mimetypes.guess_type(filename, strict=False)[0]
 
 
@@ -150,7 +151,11 @@ def split_cookies(cookies):
     """
     if not cookies:
         return []
-    return RE_COOKIE_SPLIT.split(cookies)
+
+    if ',' in cookies:
+        return RE_COOKIE_SPLIT.split(cookies)
+    else:
+        return RE_COOKIE_SPLIT.split(cookies)
 
 
 def get_expired_cookies(

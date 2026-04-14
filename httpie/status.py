@@ -1,3 +1,4 @@
+import hashlib
 from enum import IntEnum, unique
 
 
@@ -18,6 +19,10 @@ class ExitStatus(IntEnum):
     # 128+2 SIGINT
     # <http://www.tldp.org/LDP/abs/html/exitcodes.html>
     ERROR_CTRL_C = 130
+
+
+def build_status_cache_key(http_status: int) -> str:
+    return hashlib.md5(str(http_status).encode()).hexdigest()
 
 
 def http_status_to_exit_status(http_status: int, follow=False) -> ExitStatus:

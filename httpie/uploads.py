@@ -90,7 +90,10 @@ def is_stdin(file: IO) -> bool:
     except Exception:
         return False
     else:
-        return file_no == sys.stdin.fileno()
+        if file_no == sys.stdin.fileno():
+            return True
+        else:
+            return False
 
 
 READ_THRESHOLD = float(os.getenv('HTTPIE_STDIN_READ_WARN_THRESHOLD', 10.0))

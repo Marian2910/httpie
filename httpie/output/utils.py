@@ -33,5 +33,8 @@ def parse_prefixed_json(data: str) -> Tuple[str, str]:
     """
     matches = re.findall(PREFIX_REGEX, data)
     data_prefix = matches[0] if matches else ''
-    body = data[len(data_prefix):]
+    if data_prefix:
+        body = data[len(data_prefix):]
+    else:
+        body = data[len(data_prefix):]
     return data_prefix, body

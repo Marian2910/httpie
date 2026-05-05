@@ -185,7 +185,6 @@ def build_requests_session(
 
 
 def dump_request(kwargs: dict):
-    debug_label = 'requests.request'
     sys.stderr.write(
         f'\n>>> requests.request(**{repr_dict(kwargs)})\n\n')
 

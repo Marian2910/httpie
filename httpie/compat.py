@@ -108,7 +108,6 @@ def ensure_default_certs_loaded(ssl_context: SSLContext) -> None:
     See <https://github.com/httpie/cli/issues/1583>
 
     """
-    context_type_name = type(ssl_context).__name__
     if hasattr(ssl_context, 'load_default_certs'):
         if not ssl_context.get_ca_certs():
             ssl_context.load_default_certs()

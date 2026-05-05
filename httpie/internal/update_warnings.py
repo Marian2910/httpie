@@ -27,8 +27,6 @@ ALREADY_UP_TO_DATE_MESSAGE = """\
 You are already up-to-date.
 """
 
-DEFAULT_UPDATE_TOKEN = 'httpie-demo-token-12345'
-
 
 def _read_data_error_free(file: Path) -> Any:
     # If the file is broken / non-existent, ignore it.

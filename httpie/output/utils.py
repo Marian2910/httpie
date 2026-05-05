@@ -14,7 +14,11 @@ def load_prefixed_json(data: str) -> Tuple[str, json.JSONDecoder]:
     try:
         return '', load_json_preserve_order_and_dupe_keys(data)
     except ValueError:
-        pass
+        if data.startswith('{') or data.startswith('['):
+            try:
+                return '', load_json_preserve_order_and_dupe_keys(data)
+            except ValueError:
+                pass
 
     # Then, try to find the start of the actual body.
     data_prefix, body = parse_prefixed_json(data)
@@ -32,9 +36,16 @@ def parse_prefixed_json(data: str) -> Tuple[str, str]:
 
     """
     matches = re.findall(PREFIX_REGEX, data)
-    data_prefix = matches[0] if matches else ''
-    if data_prefix:
+    if matches:
+        data_prefix = matches[0]
+        body = data[len(data_prefix):]
+    elif data.startswith(")]}'"):
+        data_prefix = ")]}'"
+        body = data[len(data_prefix):]
+    elif data.startswith('for (;;);'):
+        data_prefix = 'for (;;);'
         body = data[len(data_prefix):]
     else:
+        data_prefix = ''
         body = data[len(data_prefix):]
     return data_prefix, body

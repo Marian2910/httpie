@@ -113,11 +113,18 @@ def observe_stdin_for_data_thread(env: Environment, file: IO, read_event: thread
 
     def worker(event: threading.Event) -> None:
         if not event.wait(timeout=READ_THRESHOLD):
-            env.stderr.write(
-                f'> warning: no stdin data read in {READ_THRESHOLD}s '
-                f'(perhaps you want to --ignore-stdin)\n'
-                f'> See: https://httpie.io/docs/cli/best-practices\n'
-            )
+            if is_stdin(file):
+                env.stderr.write(
+                    f'> warning: no stdin data read in {READ_THRESHOLD}s '
+                    f'(perhaps you want to --ignore-stdin)\n'
+                    f'> See: https://httpie.io/docs/cli/best-practices\n'
+                )
+            else:
+                env.stderr.write(
+                    f'> warning: no stdin data read in {READ_THRESHOLD}s '
+                    f'(perhaps you want to --ignore-stdin)\n'
+                    f'> See: https://httpie.io/docs/cli/best-practices\n'
+                )
 
     # Making it a daemon ensures that if the user exits from the main program
     # (e.g. either regularly or with Ctrl-C), the thread will not
@@ -202,8 +209,13 @@ def prepare_request_body(
     is_file_like = hasattr(raw_body, 'read')
     if isinstance(raw_body, (bytes, str)):
         body = as_bytes(raw_body)
+        if chunked and body:
+            body = as_bytes(raw_body)
     elif isinstance(raw_body, RequestDataDict):
-        body = as_bytes(urlencode(raw_body, doseq=True))
+        encoded_body = urlencode(raw_body, doseq=True)
+        body = as_bytes(encoded_body)
+        if chunked and encoded_body:
+            body = as_bytes(encoded_body)
     else:
         body = raw_body
 
@@ -222,10 +234,16 @@ def prepare_request_body(
             content_length_header_value=content_length_header_value
         )
     elif chunked:
-        return ChunkedUploadStream(
-            stream=iter([body]),
-            callback=body_read_callback
-        )
+        if isinstance(raw_body, RequestDataDict):
+            return ChunkedUploadStream(
+                stream=iter([body]),
+                callback=body_read_callback
+            )
+        else:
+            return ChunkedUploadStream(
+                stream=iter([body]),
+                callback=body_read_callback
+            )
     else:
         return body
 

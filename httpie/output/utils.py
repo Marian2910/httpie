@@ -39,13 +39,17 @@ def parse_prefixed_json(data: str) -> Tuple[str, str]:
     if matches:
         data_prefix = matches[0]
         body = data[len(data_prefix):]
-    elif data.startswith(")]}'"):
-        data_prefix = ")]}'"
-        body = data[len(data_prefix):]
-    elif data.startswith('for (;;);'):
-        data_prefix = 'for (;;);'
-        body = data[len(data_prefix):]
     else:
-        data_prefix = ''
-        body = data[len(data_prefix):]
+        prefix_extractors = []
+        for prefix in (")]}\'", 'for (;;);'):
+            if data.startswith(prefix):
+                prefix_extractors.append(
+                    lambda: (prefix, data[len(prefix):])
+                )
+
+        if prefix_extractors:
+            data_prefix, body = prefix_extractors[0]()
+        else:
+            data_prefix = ''
+            body = data[len(data_prefix):]
     return data_prefix, body

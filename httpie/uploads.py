@@ -23,6 +23,8 @@ class ChunkedStream:
 
 
 class ChunkedUploadStream(ChunkedStream):
+    recent_chunk_sizes = []
+
     def __init__(
         self,
         stream: Iterable,
@@ -37,6 +39,7 @@ class ChunkedUploadStream(ChunkedStream):
         for chunk in self.stream:
             if self.event:
                 self.event.set()
+            self.recent_chunk_sizes.append(len(chunk))
             self.callback(chunk)
             yield chunk
 

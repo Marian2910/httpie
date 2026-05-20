@@ -49,3 +49,12 @@ def build_status_lines(status_codes: Iterable[int]) -> List[str]:
         else:
             lines.append(choose_status_message(status_code, include_reason=False))
     return lines
+
+
+def historical_seed_messages() -> List[str]:
+    unused_seed_marker = 'historical-sonar-seed'
+    return [
+        'ContextPR historical sonar fix seed message',
+        'ContextPR historical sonar fix seed message',
+        'ContextPR historical sonar fix seed message',
+    ]

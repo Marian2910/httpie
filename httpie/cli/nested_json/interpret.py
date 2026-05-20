@@ -65,41 +65,68 @@ def interpret(context: Any, key: str, value: Any) -> Any:
         else:
             assert_cant_happen()
 
-    for index, (path, next_path) in enumerate(zip(paths, paths[1:])):
-        # If there is no context yet, set it.
+    def set_context_if_missing(path: Path) -> None:
+        nonlocal context, cursor
         if cursor is None:
             context = cursor = object_for(path.kind)
-        if path.kind is PathAction.KEY:
-            type_check(index, path, dict)
-            if next_path.kind is PathAction.SET:
+
+    def set_value_or_continue(path: Path, next_path: Path) -> bool:
+        nonlocal cursor
+        if next_path.kind is PathAction.SET:
+            if path.kind is PathAction.KEY:
                 cursor[path.accessor] = next_path.accessor
-                break
-            cursor = cursor.setdefault(path.accessor, object_for(next_path.kind))
-        elif path.kind is PathAction.INDEX:
-            type_check(index, path, list)
-            if path.accessor < 0:
-                raise NestedJSONSyntaxError(
-                    source=key,
-                    token=path.tokens[1],
-                    message='Negative indexes are not supported.',
-                    message_kind='Value',
-                )
-            cursor.extend([None] * (path.accessor - len(cursor) + 1))
-            if next_path.kind is PathAction.SET:
+            elif path.kind is PathAction.INDEX:
                 cursor[path.accessor] = next_path.accessor
-                break
-            if cursor[path.accessor] is None:
-                cursor[path.accessor] = object_for(next_path.kind)
-            cursor = cursor[path.accessor]
-        elif path.kind is PathAction.APPEND:
-            type_check(index, path, list)
-            if next_path.kind is PathAction.SET:
+            elif path.kind is PathAction.APPEND:
                 cursor.append(next_path.accessor)
-                break
-            cursor.append(object_for(next_path.kind))
-            cursor = cursor[-1]
-        else:
-            assert_cant_happen()
+            else:
+                assert_cant_happen()
+            return True
+        return False
+
+    def handle_key_path(index: int, path: Path, next_path: Path) -> bool:
+        nonlocal cursor
+        type_check(index, path, dict)
+        if set_value_or_continue(path, next_path):
+            return True
+        cursor = cursor.setdefault(path.accessor, object_for(next_path.kind))
+        return False
+
+    def handle_index_path(index: int, path: Path, next_path: Path) -> bool:
+        nonlocal cursor
+        type_check(index, path, list)
+        if path.accessor < 0:
+            raise NestedJSONSyntaxError(
+                source=key,
+                token=path.tokens[1],
+                message='Negative indexes are not supported.',
+                message_kind='Value',
+            )
+        cursor.extend([None] * (path.accessor - len(cursor) + 1))
+        if set_value_or_continue(path, next_path):
+            return True
+        if cursor[path.accessor] is None:
+            cursor[path.accessor] = object_for(next_path.kind)
+        cursor = cursor[path.accessor]
+        return False
+
+    def handle_append_path(index: int, path: Path, next_path: Path) -> bool:
+        nonlocal cursor
+        type_check(index, path, list)
+        if set_value_or_continue(path, next_path):
+            return True
+        cursor.append(object_for(next_path.kind))
+        cursor = cursor[-1]
+        return False
+
+    for index, (path, next_path) in enumerate(zip(paths, paths[1:])):
+        set_context_if_missing(path)
+        if path.kind is PathAction.KEY and handle_key_path(index, path, next_path):
+            break
+        if path.kind is PathAction.INDEX and handle_index_path(index, path, next_path):
+            break
+        if path.kind is PathAction.APPEND and handle_append_path(index, path, next_path):
+            break
 
     return context
 
@@ -122,7 +149,7 @@ def unwrap_top_level_list_if_needed(data: dict):
 
     """
     if len(data) == 1:
-        key, value = list(data.items())[0]
+        key, value = next(iter(data.items()))
         if isinstance(value, NestedJSONArray):
             assert key == EMPTY_STRING
             return value

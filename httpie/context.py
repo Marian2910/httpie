@@ -58,10 +58,10 @@ class Environment:
     config_dir: Path = DEFAULT_CONFIG_DIR
     stdin: Optional[IO] = sys.stdin  # `None` when closed fd (#791)
     stdin_isatty: bool = stdin.isatty() if stdin else False
-    stdin_encoding: str = None
+    stdin_encoding: Optional[str] = None
     stdout: IO = sys.stdout
     stdout_isatty: bool = stdout.isatty()
-    stdout_encoding: str = None
+    stdout_encoding: Optional[str] = None
     stderr: IO = sys.stderr
     stderr_isatty: bool = stderr.isatty()
     colors = 256
@@ -134,7 +134,7 @@ class Environment:
     def __repr__(self):
         return f'<{type(self).__name__} {self}>'
 
-    _config: Config = None
+    _config: Optional[Config] = None
 
     @property
     def config(self) -> Config:

@@ -32,10 +32,15 @@ from .internal.daemon_runner import is_daemon_mode, run_daemon_task
 def raw_main(
     parser: argparse.ArgumentParser,
     main_program: Callable[[argparse.Namespace, Environment], ExitStatus],
-    args: List[Union[str, bytes]] = sys.argv,
-    env: Environment = Environment(),
+    args: Optional[List[Union[str, bytes]]] = None,
+    env: Optional[Environment] = None,
     use_default_options: bool = True,
 ) -> ExitStatus:
+    if args is None:
+        args = sys.argv
+    if env is None:
+        env = Environment()
+
     program_name, *args = args
     env.program_name = os.path.basename(program_name)
     args = decode_raw_args(args, env.stdin_encoding)
@@ -144,8 +149,8 @@ def raw_main(
 
 
 def main(
-    args: List[Union[str, bytes]] = sys.argv,
-    env: Environment = Environment()
+    args: Optional[List[Union[str, bytes]]] = None,
+    env: Optional[Environment] = None
 ) -> ExitStatus:
     """
     The main function.
@@ -284,7 +289,7 @@ def print_debug_info(env: Environment):
 
 def decode_raw_args(
     args: List[Union[str, bytes]],
-    stdin_encoding: str
+    stdin_encoding: Optional[str]
 ) -> List[str]:
     """
     Convert all bytes args to str
@@ -292,7 +297,7 @@ def decode_raw_args(
 
     """
     return [
-        arg.decode(stdin_encoding)
+        arg.decode(stdin_encoding or sys.getdefaultencoding())
         if type(arg) is bytes else arg
         for arg in args
     ]

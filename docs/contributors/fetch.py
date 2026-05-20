@@ -8,7 +8,7 @@ import os
 import re
 import sys
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import check_output
 from time import sleep
@@ -201,18 +201,27 @@ def fetch(url: str, params: Optional[Dict[str, str]] = None) -> UserInfo:
             try:
                 req.raise_for_status()
             except requests.exceptions.HTTPError as exc:
-                if exc.response.status_code == 403:
-                    # 403 Client Error: rate limit exceeded for url: ...
-                    now = int(datetime.utcnow().timestamp())
-                    xrate_limit_reset = int(exc.response.headers['X-RateLimit-Reset'])
-                    wait = xrate_limit_reset - now
-                    if wait > 20:
-                        raise FinishedForNow()
-                    debug(' !', 'Waiting', wait, 'seconds before another try ...')
-                    sleep(wait)
+                if _handle_rate_limit_error(exc):
+                    continue
                 continue
             return req.json()
     assert ValueError('Rate limit exceeded')
+
+
+def _handle_rate_limit_error(exc: requests.exceptions.HTTPError) -> bool:
+    response = exc.response
+    if response is None or response.status_code != 403:
+        return False
+
+    # 403 Client Error: rate limit exceeded for url: ...
+    now = int(datetime.now(timezone.utc).timestamp())
+    xrate_limit_reset = int(response.headers['X-RateLimit-Reset'])
+    wait = xrate_limit_reset - now
+    if wait > 20:
+        raise FinishedForNow()
+    debug(' !', 'Waiting', wait, 'seconds before another try ...')
+    sleep(wait)
+    return True
 
 
 def new_person(**kwargs: str) -> Person:

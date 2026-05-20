@@ -1,10 +1,11 @@
 _http_complete() {
     local cur_word=${COMP_WORDS[COMP_CWORD]}
-    local prev_word=${COMP_WORDS[COMP_CWORD - 1]}
 
     if [[ "$cur_word" == -* ]]; then
         _http_complete_options "$cur_word"
     fi
+
+    return 0
 }
 
 complete -o default -F _http_complete http httpie.http httpie.https https
@@ -17,4 +18,5 @@ _http_complete_options() {
     --follow --verify --cert --cert-key --timeout --check-status --ignore-stdin
     --help --version --traceback --debug --raw"
     COMPREPLY=( $( compgen -W "$options" -- "$cur_word" ) )
+    return 0
 }

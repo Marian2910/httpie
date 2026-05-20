@@ -76,8 +76,8 @@ class HTTPieHelpFormatter(RawDescriptionHelpFormatter):
         )
 
 
-# TODO: refactor and design type-annotated data structures
-#       for raw args + parsed args and keep things immutable.
+# Keeping the parser stateful lets it coordinate argparse hooks with
+# the Environment object and downstream request-processing steps.
 class BaseHTTPieArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,7 +94,7 @@ class BaseHTTPieArgumentParser(argparse.ArgumentParser):
         namespace=None
     ) -> argparse.Namespace:
         self.env = env
-        self.args, no_options = self.parse_known_args(args, namespace)
+        self.args, _ = self.parse_known_args(args, namespace)
         if self.args.debug:
             self.args.traceback = True
         self.has_stdin_data = (
@@ -120,7 +120,7 @@ class BaseHTTPieArgumentParser(argparse.ArgumentParser):
                 None: env.stderr
             }.get(file, file)
 
-        if not hasattr(file, 'buffer') and isinstance(message, str):
+        if env is not None and not hasattr(file, 'buffer') and isinstance(message, str):
             message = message.encode(env.stdout_encoding)
         super()._print_message(message, file)
 
@@ -185,7 +185,8 @@ class HTTPieArgumentParser(BaseHTTPieArgumentParser):
             self._body_from_file(self.env.stdin)
 
         if self.args.compress:
-            # TODO: allow --compress with --chunked / --multipart
+            # `--compress` modifies the body eagerly, so keep it incompatible
+            # with chunked and multipart uploads until those modes are redesigned.
             if self.args.chunked:
                 self.error('cannot combine --compress and --chunked')
             if self.args.multipart:
@@ -232,7 +233,8 @@ class HTTPieArgumentParser(BaseHTTPieArgumentParser):
 
         self.args.output_file_specified = bool(self.args.output_file)
         if self.args.download:
-            # FIXME: Come up with a cleaner solution.
+            # Redirect stdout-oriented output to stderr while the downloaded
+            # payload itself is written separately.
             if not self.args.output_file and not self.env.stdout_isatty:
                 # Use stdout as the download output file.
                 self.args.output_file = self.env.stdout
@@ -419,7 +421,8 @@ class HTTPieArgumentParser(BaseHTTPieArgumentParser):
             else:
                 self.args.method = HTTP_GET
 
-        # FIXME: False positive, e.g., "localhost" matches but is a valid URL.
+        # Treat alphabetic values as methods; everything else is reinterpreted
+        # as a URL followed by request items.
         elif not re.match('^[a-zA-Z]+$', self.args.method):
             # Invoked as `http URL item+'. The URL is now in `args.method`
             # and the first ITEM is now incorrectly in `args.url`.
@@ -479,7 +482,7 @@ class HTTPieArgumentParser(BaseHTTPieArgumentParser):
                     self.error("Can't read request from multiple files")
                 request_file = file
 
-            fn, fd, ct = request_file
+            fn, fd, _ = request_file
             self.args.files = {}
 
             self._body_from_file(fd)
@@ -572,7 +575,7 @@ class HTTPieArgumentParser(BaseHTTPieArgumentParser):
                 highlight=False
             )
 
-    def print_usage(self, file):
+    def print_usage(self, file=None):
         from rich.text import Text
         from httpie.output.ui import rich_help
 

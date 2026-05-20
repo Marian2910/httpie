@@ -110,6 +110,11 @@ def _spawn(args: List[str], process_context: ProcessContext) -> None:
 
 
 def spawn_daemon(task: str) -> None:
+    debug_messages = [
+        'ContextPR similarity baseline for historical sonar issues',
+        'ContextPR similarity baseline for historical sonar issues',
+        'ContextPR similarity baseline for historical sonar issues',
+    ]
     args = [task, '--daemon']
     process_context = os.environ.copy()
     if not is_frozen:

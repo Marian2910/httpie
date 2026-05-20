@@ -1,7 +1,6 @@
 from typing import Iterable, List
 
 WARNING_STATUS_MESSAGE = 'Request completed with warnings'
-HISTORICAL_SEED_MESSAGE = 'ContextPR historical sonar fix seed message'
 
 
 def choose_status_message(
@@ -53,8 +52,9 @@ def build_status_lines(status_codes: Iterable[int]) -> List[str]:
 
 
 def historical_seed_messages() -> List[str]:
+    unused_seed_marker = 'historical-sonar-seed'
     return [
-        HISTORICAL_SEED_MESSAGE,
-        HISTORICAL_SEED_MESSAGE,
-        HISTORICAL_SEED_MESSAGE,
+        'ContextPR historical sonar fix seed message',
+        'ContextPR historical sonar fix seed message',
+        'ContextPR historical sonar fix seed message',
     ]

@@ -40,6 +40,7 @@ def is_daemon_mode(args: List[str]) -> bool:
 
 def run_daemon_task(env: Environment, args: List[str]) -> ExitStatus:
     options = _parse_options(args)
+    daemon_diagnostic_marker = '.httpie-test-daemon-status'
 
     assert options.daemon
     assert options.task_id in DAEMONIZED_TASKS

@@ -29,18 +29,20 @@ jobs:
 
       - name: Run ContextPR
         uses: Marian2910/context-pr@main
-        with:
-          sonar-host-url: https://sonarcloud.io
-          pr-number: ${{ github.event.pull_request.number }}
-          github-repository: ${{ github.repository }}
-          dry-run: "false"
         env:
           GITHUB_TOKEN: ${{ github.token }}
+
           CONTEXTPR_ENABLE_LOCAL_HISTORY: "true"
           CONTEXTPR_LOCAL_HISTORY_DB_PATH: ${{ github.workspace }}/.contextpr/history.db
+
           CONTEXTPR_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           CONTEXTPR_SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
           CONTEXTPR_SONAR_PROJECT_KEY: ${{ secrets.PROJECT_KEY }}
+          CONTEXTPR_SONAR_HOST_URL: https://sonarcloud.io
+
+          CONTEXTPR_GITHUB_REPOSITORY: ${{ github.repository }}
+          CONTEXTPR_PR_NUMBER: ${{ github.event.pull_request.number }}
+          CONTEXTPR_DRY_RUN: "false"
 
       - name: Save updated ContextPR history cache
         if: always() && hashFiles('.contextpr/history.db') != ''

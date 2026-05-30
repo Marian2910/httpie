@@ -54,7 +54,8 @@ PREDEFINED_FILES: Final = {'3G': (3 * 1024 ** 2, 1024)}
 
 class QuietSimpleHTTPServer(SimpleHTTPRequestHandler):
     def log_message(self, *args, **kwargs):
-        pass
+        # Silence request logs so benchmark output stays focused on timing results.
+        return None
 
 
 @contextmanager

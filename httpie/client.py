@@ -244,7 +244,7 @@ def apply_missing_repeated_headers(
             continue
 
         original_keys, original_values = zip(*filter(
-            lambda item: item[0].casefold() == prepared_name.casefold(),
+            lambda item, prepared_name=prepared_name: item[0].casefold() == prepared_name.casefold(),
             original_headers.items()
         ))
 

@@ -68,7 +68,7 @@ def parse(source: str) -> Iterator[Path]:
 
     # noinspection PyShadowingNames
     def parse_root():
-        tokens = []
+        path_tokens = []
         if not can_advance():
             return Path(
                 kind=PathAction.KEY,
@@ -77,17 +77,17 @@ def parse(source: str) -> Iterator[Path]:
             )
         # (literal | index_path | append_path)?
         token = expect(*LITERAL_TOKENS, TokenKind.LEFT_BRACKET)
-        tokens.append(token)
+        path_tokens.append(token)
         if token.kind in LITERAL_TOKENS:
             action = PathAction.KEY
             value = str(token.value)
         elif token.kind is TokenKind.LEFT_BRACKET:
             token = expect(TokenKind.NUMBER, TokenKind.RIGHT_BRACKET)
-            tokens.append(token)
+            path_tokens.append(token)
             if token.kind is TokenKind.NUMBER:
                 action = PathAction.INDEX
                 value = token.value
-                tokens.append(expect(TokenKind.RIGHT_BRACKET))
+                path_tokens.append(expect(TokenKind.RIGHT_BRACKET))
             elif token.kind is TokenKind.RIGHT_BRACKET:
                 action = PathAction.APPEND
                 value = None
@@ -99,7 +99,7 @@ def parse(source: str) -> Iterator[Path]:
         return Path(
             kind=action,
             accessor=value,
-            tokens=tokens,
+            tokens=path_tokens,
             is_root=True
         )
 
@@ -132,7 +132,7 @@ def tokenize(source: str) -> Iterator[Token]:
     def send_buffer() -> Iterator[Token]:
         nonlocal backslashes
         if not buffer:
-            return None
+            return
 
         value = ''.join(buffer)
         kind = TokenKind.TEXT
@@ -164,12 +164,13 @@ def tokenize(source: str) -> Iterator[Token]:
         if index in OPERATORS:
             yield from send_buffer()
             yield Token(OPERATORS[index], index, cursor, cursor + 1)
-        elif index == BACKSLASH and can_advance():
-            if source[cursor + 1] in SPECIAL_CHARS:
+        elif index == BACKSLASH and cursor + 1 < len(source):
+            next_char = source[cursor + 1]
+            if next_char in SPECIAL_CHARS:
                 backslashes += 1
             else:
                 buffer.append(index)
-            buffer.append(source[cursor + 1])
+            buffer.append(next_char)
             cursor += 1
         else:
             buffer.append(index)

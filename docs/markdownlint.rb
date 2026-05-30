@@ -38,11 +38,11 @@ exclude_rule 'MD012'
 rule 'MD029', :style => :ordered
 
 # MD033 Inline HTML
-# TODO: Tweak elements when https://github.com/markdownlint/markdownlint/issues/118 will be done?
+# Keep this disabled until markdownlint supports the HTML fragments used in our docs.
 exclude_rule 'MD033'
 
 # MD034 Bare URL used
-# TODO: Remove when https://github.com/markdownlint/markdownlint/issues/328 will be fixed.
+# Keep this disabled while upstream still flags URLs we intentionally render as plain text.
 exclude_rule 'MD034'
 
 # MD041 First line in file should be a top level header

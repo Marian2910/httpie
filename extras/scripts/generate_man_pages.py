@@ -105,9 +105,8 @@ def _escape_and_dedent(text: str) -> str:
     lines = []
     for should_act, line in enumerate(text.splitlines()):
         # Only dedent after the first line.
-        if should_act:
-            if line.startswith('    '):
-                line = line[4:]
+        if should_act and line.startswith('    '):
+            line = line[4:]
 
         lines.append(line)
     return '\n'.join(lines).translate(ESCAPE_MAP)
@@ -163,7 +162,7 @@ def to_man_page(program_name: str, spec: ParserSpec, *, is_top_level_cmd: bool =
                 builder.add_options(raw_arg['options'], metavar=metavar)
 
                 desc = builder.format_desc(raw_arg.get('description', ''))
-                builder.write('\n' + desc + '\n')
+                builder.write(f'\n{desc}\n')
 
             builder.separate()
 

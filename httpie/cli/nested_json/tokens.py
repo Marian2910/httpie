@@ -19,8 +19,7 @@ class TokenKind(Enum):
         for key, value in OPERATORS.items():
             if value is self:
                 return repr(key)
-        else:
-            return 'a ' + self.name.lower()
+        return 'a ' + self.name.lower()
 
 
 OPERATORS = {
@@ -74,6 +73,7 @@ class Path:
             return OPEN_BRACKET + str(self.accessor) + CLOSE_BRACKET
         elif self.kind is PathAction.APPEND:
             return OPEN_BRACKET + CLOSE_BRACKET
+        raise ValueError(f'Unexpected path action: {self.kind!r}')
 
 
 class NestedJSONArray(list):

@@ -35,13 +35,14 @@ def generate_snippets(release: str) -> str:
     template = Template(source=TPL_FILE.read_text(encoding='utf-8'))
     output = template.render(contributors=contributors, release=release)
     print(output)
-    return 0
+    return output
 
 
 if __name__ == '__main__':
     ret = 1
     try:
-        ret = generate_snippets(sys.argv[1])
+        generate_snippets(sys.argv[1])
+        ret = 0
     except (IndexError, TypeError):
         ret = 2
         print(f'''

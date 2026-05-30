@@ -61,6 +61,9 @@ def upgrade_session(env: Environment, args: argparse.Namespace, hostname: str, s
 
 
 def cli_upgrade_session(env: Environment, args: argparse.Namespace) -> ExitStatus:
+    if args.hostname is None or args.session is None:
+        parser.error(missing_subcommand('cli', 'sessions upgrade'))
+
     return upgrade_session(
         env,
         args=args,
@@ -71,6 +74,9 @@ def cli_upgrade_session(env: Environment, args: argparse.Namespace) -> ExitStatu
 
 def cli_upgrade_all_sessions(env: Environment, args: argparse.Namespace) -> ExitStatus:
     session_dir_path = env.config_dir / SESSIONS_DIR_NAME
+    if not session_dir_path.exists():
+        env.stdout.write('No sessions found.\n')
+        return ExitStatus.SUCCESS
 
     status = ExitStatus.SUCCESS
     for host_path in session_dir_path.iterdir():

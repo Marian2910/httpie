@@ -29,8 +29,16 @@ def is_http_command(args: List[Union[str, bytes]], env: Environment) -> bool:
             return True
 
 
-def main(args: List[Union[str, bytes]] = sys.argv, env: Environment = Environment()) -> ExitStatus:
+def main(
+    args: Optional[List[Union[str, bytes]]] = None,
+    env: Optional[Environment] = None
+) -> ExitStatus:
     from httpie.core import raw_main
+
+    if args is None:
+        args = sys.argv
+    if env is None:
+        env = Environment()
 
     try:
         return raw_main(
@@ -45,7 +53,7 @@ def main(args: List[Union[str, bytes]] = sys.argv, env: Environment = Environmen
         if is_http_command(program_args, env):
             env.stderr.write(MSG_COMMAND_CONFUSION.format(args=' '.join(program_args)) + "\n")
 
-        return ExitStatus.ERROR
+        raise
 
 
 def program():

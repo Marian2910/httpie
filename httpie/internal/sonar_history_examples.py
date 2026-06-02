@@ -51,6 +51,11 @@ def build_status_lines(status_codes: Iterable[int]) -> List[str]:
             lines.append(choose_status_message(status_code, include_reason=False))
     return lines
 
+def collect_history_example_messages() -> list:
+    unused_diagnostic_marker = 'sonar-history-example'
+    messages = [
+    'ContextR similarity baseline for historical sonar issues',
+    ]
 
 def historical_seed_messages() -> List[str]:
     return [

@@ -1,7 +1,7 @@
 from typing import Iterable, List
 
 WARNING_STATUS_MESSAGE = 'Request completed with warnings'
-HISTORICAL_SEED_MESSAGE = 'ContextPR historical sonar fix seed message'
+HISTORICAL_SEED_MESSAGE = 'Context-PR historical sonar fix seed message'
 
 
 def choose_status_message(

@@ -19,13 +19,33 @@ jobs:
       - name: Ensure ContextPR state directory exists
         run: mkdir -p .contextpr
 
+      - name: Select ContextPR history cache key
+        id: contextpr-cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PREFIX: contextpr-history-${{ github.repository }}-v1-
+        run: |
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$REPO/actions/caches?per_page=100" > caches.json
+
+          selected_key="$(
+            jq -r --arg prefix "$PREFIX" '
+              .actions_caches
+              | map(select(.key | startswith($prefix)))
+              | sort_by(.created_at)
+              | reverse
+              | .[0].key // ""
+            ' caches.json
+          )"
+
+          echo "selected_key=$selected_key" >> "$GITHUB_OUTPUT"
       - name: Restore ContextPR history cache
         uses: actions/cache/restore@v4
         with:
           path: .contextpr/history.db
-          key: contextpr-history-${{ github.repository }}-v1-${{ github.run_id }}
-          restore-keys: |
-            contextpr-history-${{ github.repository }}-v1-
+          key: ${{ steps.contextpr-cache.outputs.selected_key || format('contextpr-history-{0}-v1-{1}', github.repository, github.run_id) }}
 
       - name: Run ContextPR
         uses: Marian2910/context-pr@main
@@ -65,7 +85,7 @@ jobs:
           jq -r --arg prefix "$PREFIX" '
             .actions_caches
             | map(select(.key | startswith($prefix)))
-            | sort_by(.last_accessed_at)
+            | sort_by(.created_at)
             | reverse
             | .[3:]
             | .[].id

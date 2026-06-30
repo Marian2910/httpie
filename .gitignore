@@ -153,3 +153,5 @@ dmypy.json
 *.nupkg
 
 artifacts/
+.context-pr/
+secrets/
